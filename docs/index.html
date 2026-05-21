@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Los Santos Dating</title>
+    <style>
+      :root { --bg:#0b1020; --pink:#f04ba5; --purple:#b65eff; --line:rgba(255,255,255,.13); --panel:rgba(255,255,255,.08); }
+      * { box-sizing:border-box; }
+      body {
+        margin:0; min-height:100vh; color:white; font-family:Inter,system-ui,Segoe UI,sans-serif;
+        background:radial-gradient(circle at 15% 10%,rgba(240,75,165,.22),transparent 30%),radial-gradient(circle at 85% 5%,rgba(182,94,255,.2),transparent 28%),linear-gradient(135deg,#070a14,var(--bg),#12152b);
+      }
+      button,input,textarea,select { font:inherit; }
+      button { cursor:pointer; }
+      .grid { position:fixed; inset:0; pointer-events:none; opacity:.42; background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px); background-size:42px 42px; mask-image:linear-gradient(to bottom,black,transparent 85%); }
+      .glass { border:1px solid var(--line); background:var(--panel); box-shadow:0 22px 70px rgba(0,0,0,.32); backdrop-filter:blur(22px); border-radius:8px; }
+      .page { position:relative; width:min(1440px,100%); min-height:100vh; margin:auto; padding:16px; }
+      .auth { display:grid; min-height:calc(100vh - 32px); align-items:center; gap:28px; grid-template-columns:minmax(0,1fr) 460px; }
+      .auth h1 { margin:12px 0 18px; font-size:clamp(42px,7vw,86px); line-height:.9; }
+      .pink { color:var(--pink); }
+      .muted { color:rgba(255,255,255,.62); }
+      .auth-card,.topbar,.side,.panel,.hero { padding:18px; }
+      .info-grid,.stats,.cards { display:grid; gap:10px; }
+      .info-grid { grid-template-columns:repeat(3,1fr); margin-top:28px; }
+      .info,.stat,.row { border-radius:8px; background:rgba(255,255,255,.08); padding:14px; }
+      input,textarea,select { width:100%; border:1px solid rgba(255,255,255,.12); border-radius:7px; background:rgba(0,0,0,.24); color:white; outline:0; padding:12px; }
+      label { display:block; margin-top:12px; color:rgba(255,255,255,.66); font-size:14px; }
+      label span { display:block; margin-bottom:7px; }
+      textarea { min-height:92px; resize:vertical; }
+      .primary { width:100%; min-height:46px; border:0; border-radius:7px; color:white; font-weight:900; background:linear-gradient(90deg,var(--pink),var(--purple)); box-shadow:0 0 28px rgba(240,75,165,.32); }
+      .discord { background:#5865f2; margin-bottom:10px; }
+      .app { display:none; }
+      .topbar { position:sticky; top:16px; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+      .brand h1 { margin:0; font-size:24px; }
+      .brand p { margin:0 0 2px; font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:rgba(255,255,255,.5); }
+      .nav { display:flex; flex-wrap:wrap; gap:6px; }
+      .nav button,.ghost { min-height:40px; border:0; border-radius:7px; background:transparent; color:rgba(255,255,255,.7); padding:0 12px; }
+      .nav button.active,.nav button:hover,.ghost:hover { background:rgba(255,255,255,.14); color:white; }
+      .layout { display:grid; grid-template-columns:280px minmax(0,1fr); gap:18px; margin-top:18px; }
+      .user { display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+      .avatar { display:grid; width:48px; height:48px; place-items:center; border-radius:8px; background:linear-gradient(135deg,var(--pink),var(--purple)); font-weight:950; }
+      .menu { display:grid; gap:7px; }
+      .menu button { height:42px; border:0; border-radius:7px; background:transparent; color:rgba(255,255,255,.66); text-align:left; padding:0 12px; }
+      .menu button.active,.menu button:hover { background:rgba(255,255,255,.13); color:white; }
+      .hero { margin-bottom:18px; }
+      .hero h2 { margin:6px 0 0; font-size:clamp(30px,5vw,56px); line-height:.96; max-width:820px; }
+      .stats { grid-template-columns:repeat(4,1fr); margin-top:16px; }
+      .view { display:none; }
+      .view.active { display:block; }
+      .profile-card { position:relative; min-height:560px; overflow:hidden; border-radius:8px; }
+      .profile-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+      .profile-card:after { content:""; position:absolute; inset:0; background:linear-gradient(to top,#050711,rgba(5,7,17,.45),transparent); }
+      .profile-copy { position:absolute; z-index:2; left:18px; right:18px; bottom:18px; }
+      .tags { display:flex; flex-wrap:wrap; gap:8px; }
+      .tag,.badge { display:inline-block; border-radius:7px; background:rgba(255,255,255,.13); padding:7px 10px; }
+      .profile-copy h3 { margin:14px 0 4px; font-size:42px; }
+      .actions { display:flex; gap:10px; margin-top:18px; }
+      .actions .ghost { width:56px; background:rgba(255,255,255,.12); font-size:22px; }
+      .actions .primary { flex:1; }
+      .cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+      .bubble { width:fit-content; max-width:80%; margin-bottom:10px; border-radius:8px; background:rgba(255,255,255,.11); padding:10px 12px; }
+      .bubble.mine { margin-left:auto; background:var(--pink); }
+      @media (max-width:980px){ .auth,.layout{grid-template-columns:1fr}.side{display:none}.info-grid,.stats,.cards{grid-template-columns:1fr 1fr}.nav{display:none} }
+      @media (max-width:560px){ .page{padding:10px}.stats,.cards,.info-grid{grid-template-columns:1fr}.profile-card{min-height:620px}.topbar{top:10px}.brand h1{font-size:20px} }
+    </style>
+  </head>
+  <body>
+    <div class="grid"></div>
+    <main class="page">
+      <section class="auth" id="auth">
+        <div>
+          <p class="pink"><strong>GTA 5 RP social network</strong></p>
+          <h1>Los Santos Dating</h1>
+          <p class="muted">Сеть знакомств и общения вне игры. Игроки привязывают Discord, указывают UCP-аккаунт без проверки и создают ник для социальной сети.</p>
+          <div class="info-grid">
+            <div class="info"><strong>Персонажи</strong><p class="muted">Смотри анкеты соигроков и RP-статусы.</p></div>
+            <div class="info"><strong>Матчи</strong><p class="muted">Лайки, совпадения, гости профиля.</p></div>
+            <div class="info"><strong>Вне игры</strong><p class="muted">С телефона или ПК, без входа на сервер.</p></div>
+          </div>
+        </div>
+        <form class="auth-card glass" id="register">
+          <h2>Вход или регистрация</h2>
+          <button class="primary discord" type="button" id="discordLogin">Войти через Discord</button>
+          <label><span>Discord</span><input id="discord" placeholder="username или name#0000" /></label>
+          <label><span>Имя UCP аккаунта</span><input id="ucp" placeholder="Вводится без проверки" /></label>
+          <label><span>Ник в социальной сети</span><input id="socialNick" placeholder="Например, NightDriver" /></label>
+          <label><span>О себе / персонаже</span><textarea id="bio" placeholder="Кого ищешь, какие RP-сюжеты интересны..."></textarea></label>
+          <button class="primary" type="submit">Зарегистрироваться</button>
+          <p class="muted">Прототип сохраняет данные только на текущую сессию.</p>
+        </form>
+      </section>
+
+      <section class="app" id="app">
+        <header class="topbar glass">
+          <div class="brand"><p>GTA 5 RP Social</p><h1>Los Santos Dating</h1></div>
+          <nav class="nav" id="nav"></nav>
+          <button class="ghost" id="logout">Выйти</button>
+        </header>
+        <div class="layout">
+          <aside class="side glass">
+            <div class="user"><div class="avatar" id="avatar">LS</div><div><strong id="displayNick">Player123</strong><p class="muted" id="displayMeta">@discord · UCP</p></div></div>
+            <div class="menu" id="menu"></div>
+          </aside>
+          <section>
+            <div class="hero glass">
+              <p class="pink"><strong>Игровые знакомства вне самой игры</strong></p>
+              <h2>Смотри персонажей, находи соигроков, начинай RP-истории</h2>
+              <div class="stats"><div class="stat"><b>1 284</b><br><span class="muted">Онлайн</span></div><div class="stat"><b>18 920</b><br><span class="muted">Анкет</span></div><div class="stat"><b>4 712</b><br><span class="muted">Матчей</span></div><div class="stat"><b>328</b><br><span class="muted">VIP</span></div></div>
+            </div>
+            <div id="views">
+              <div class="view active" data-view="Поиск">
+                <article class="profile-card glass"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1100&q=80" alt="Violet_Rayne"><div class="profile-copy"><div class="tags"><span class="tag">#drift</span><span class="tag">#voice-rp</span><span class="tag">#clubs</span></div><h3>Violet_Rayne, 24</h3><p class="muted">Vinewood · Discord @violet.rayne · персонаж Alicia Monroe</p><p>Ночные поездки, клубы, семейные RP-сцены и красивые кадры на закате.</p><div class="actions"><button class="ghost">×</button><button class="primary">♥ Лайк</button><button class="ghost">⊘</button></div></div></article>
+              </div>
+              <div class="view panel glass" data-view="Профиль"><h2>Мой профиль</h2><div class="cards"><div class="info"><span class="muted">Ник</span><h3 id="profileNick"></h3></div><div class="info"><span class="muted">Discord</span><h3 id="profileDiscord"></h3></div><div class="info"><span class="muted">UCP</span><h3 id="profileUcp"></h3></div><div class="info"><span class="muted">Статус</span><h3>Анкета видна всем</h3></div></div></div>
+              <div class="view panel glass" data-view="Матчи"><h2>Совпадения</h2><div class="row"><strong>Violet_Rayne</strong><span class="muted">Открыть чат</span></div><div class="row"><strong>Marco_Vega</strong><span class="muted">Удалить матч</span></div></div>
+              <div class="view panel glass" data-view="Чат"><h2>Чат</h2><div class="bubble">Привет, видел твою анкету. Сегодня играешь?</div><div class="bubble mine">Да, после 21:00. Обсудим сюжет вне игры.</div><input placeholder="Сообщение, эмодзи или вложение"></div>
+              <div class="view panel glass" data-view="Гости"><h2>Гости</h2><div class="row"><strong>Tony_Starkov</strong><span class="muted">Сегодня, 21:14</span></div><div class="row"><strong>Kate_Monroe</strong><span class="muted">Сегодня, 19:42</span></div></div>
+              <div class="view panel glass" data-view="Уведомления"><h2>Уведомления</h2><div class="row"><strong>Новый лайк</strong><span class="muted">Kate_Monroe</span></div><div class="row"><strong>Совпадение</strong><span class="muted">Violet_Rayne</span></div></div>
+              <div class="view panel glass" data-view="VIP"><h2>VIP функции</h2><div class="cards"><div class="info"><strong>Просмотр лайков</strong><p class="muted">Кто оценил анкету.</p></div><div class="info"><strong>Расширенные фильтры</strong><p class="muted">Онлайн, фото, город, RP-интересы.</p></div></div></div>
+              <div class="view panel glass" data-view="Админ"><h2>Админ-панель</h2><div class="row"><strong>Пользователи</strong><span class="muted">Блокировка</span></div><div class="row"><strong>Жалобы</strong><span class="muted">Модерация</span></div><div class="row"><strong>DAU</strong><span class="muted">1 284</span></div></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <script>
+      const tabs = ["Поиск","Профиль","Матчи","Чат","Гости","Уведомления","VIP","Админ"];
+      const state = { nick:"Player123", discord:"discord_user", ucp:"Player123_UCP" };
+      const nav = document.getElementById("nav");
+      const menu = document.getElementById("menu");
+      function renderTabs(){ [nav,menu].forEach((root)=>{ root.innerHTML=""; tabs.forEach((tab,i)=>{ const b=document.createElement("button"); b.textContent=tab; b.className=i===0?"active":""; b.onclick=()=>setView(tab); root.appendChild(b); }); }); }
+      function setView(tab){ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===tab)); document.querySelectorAll(".nav button,.menu button").forEach(b=>b.classList.toggle("active",b.textContent===tab)); }
+      function enter(){ document.getElementById("auth").style.display="none"; document.getElementById("app").style.display="block"; document.getElementById("displayNick").textContent=state.nick; document.getElementById("displayMeta").textContent="@"+state.discord+" · "+state.ucp; document.getElementById("avatar").textContent=state.nick.slice(0,2).toUpperCase(); document.getElementById("profileNick").textContent=state.nick; document.getElementById("profileDiscord").textContent="@"+state.discord; document.getElementById("profileUcp").textContent=state.ucp; renderTabs(); }
+      document.getElementById("register").onsubmit=(e)=>{ e.preventDefault(); state.discord=document.getElementById("discord").value||state.discord; state.ucp=document.getElementById("ucp").value||state.ucp; state.nick=document.getElementById("socialNick").value||state.nick; enter(); };
+      document.getElementById("discordLogin").onclick=enter;
+      document.getElementById("logout").onclick=()=>{ document.getElementById("app").style.display="none"; document.getElementById("auth").style.display="grid"; };
+    </script>
+  </body>
+</html>
